@@ -16,7 +16,6 @@ shaderId = 0
 
 def criandoVAOeVBO():
     global vaoId, shaderId, vertices
-    glClearColor(1, 1, 1, 1)
 
     vertices = np.array(vertices, np.dtype(np.float32)) # Converte os vértices para um array numpy de float32
 
@@ -57,6 +56,7 @@ def shadersEncurtados():
 
 def init():
     global shaderId, vaoId, vertices
+    glClearColor(1, 1, 1, 1)
     criandoVAOeVBO()
     shadersEncurtados()
 
