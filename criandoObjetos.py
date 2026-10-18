@@ -6,6 +6,7 @@ from loadObj import loadObj
 
 catBed = loadObj(obj_path=".\objects\CatBed.obj",
                  position=(0.4, 1.0, 0.4), scale=(0.5, 0.5, 0.5))
+mouse = loadObj(obj_path=".\objects\model.obj", position=(0.4, 1.05, 0.4), scale=(0.2, 0.2, 0.2))
 
 
 def corDeFundo(r, g, b, a):
@@ -74,3 +75,4 @@ def criarTriangulo(matriz, altura, comprimento):
 
 def objetos():
     catBed.draw()
+    mouse.draw()
