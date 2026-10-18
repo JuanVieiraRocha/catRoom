@@ -1,4 +1,7 @@
-PyOpenGL 
+PyOpenGL
 PyOpenGL-Accelerate
 glfw
 numpy
+pyglm
+pywavefront
+pyglet == 1.5.24
