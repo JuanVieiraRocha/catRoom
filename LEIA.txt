@@ -1,0 +1,3 @@
+O arquivo "main.py" é o protótipo da câmera isométrica, que será usada para mover móveis e olhar o quarto.
+
+O arquivo "demo_gato.py" é o protótipo da câmera próxima, onde o gato pode se mover pelo quarto e há interações, como brincar, fazer carinho e comer.
