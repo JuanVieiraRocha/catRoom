@@ -19,7 +19,7 @@ up = [0.0, 1.0, 0.0]
 def init():
     global vaoId, shaderId, matrizView, vertices, qtdDeVertices, eye, at, up
     # Criando chão 3D
-    vertices = criandoObjetos.criarChao(vertices, 0.2, 0.6, 1.0, 0.2, 0.6)
+    vertices = criandoObjetos.criarChao(vertices, 0.2, 2.0, 1.0, 0.2, 2.0)
     dimensoesVertice = len(vertices[0])
     qtdDeVertices = len(vertices)
 

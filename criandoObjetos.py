@@ -5,8 +5,11 @@ import ctypes
 from loadObj import loadObj
 
 catBed = loadObj(obj_path=".\objects\CatBed.obj",
-                 position=(0.4, 1.0, 0.4), scale=(0.5, 0.5, 0.5))
-mouse = loadObj(obj_path=".\objects\model.obj", position=(0.4, 1.05, 0.4), scale=(0.2, 0.2, 0.2))
+                 position=(1.5, 1.0, 1.5), scale=(0.5, 0.5, 0.5))
+mouse = loadObj(obj_path=".\objects\mouse.obj", position=(
+    1.5, 1.05, 1.5), scale=(0.3, 0.3, 0.3))
+tunnel = loadObj(obj_path=r".\objects\tunnel.obj", position=(
+    0.9, 1.08, 0.9), scale=(1.5, 1.5, 1.5))
 
 
 def corDeFundo(r, g, b, a):
@@ -76,3 +79,4 @@ def criarTriangulo(matriz, altura, comprimento):
 def objetos():
     catBed.draw()
     mouse.draw()
+    tunnel.draw()
