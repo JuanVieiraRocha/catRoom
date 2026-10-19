@@ -4,5 +4,6 @@ glfw
 numpy
 pyglm
 pywavefront
+Pillow
 pyglet == 1.5.24
 python == 3.12
