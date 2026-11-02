@@ -64,7 +64,6 @@ def render():
     openGL.glDrawArrays(openGL.GL_TRIANGLE_STRIP, 0, qtdDeVertices)
     openGL.glBindVertexArray(0)
     openGL.glUseProgram(0)
-    
 
 
 
