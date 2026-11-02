@@ -2,14 +2,14 @@ import OpenGL.GL as openGL
 import OpenGL.GL.shaders as gls
 import numpy as np
 import ctypes
-from loadObj import loadObj
+import loadObj
 
-catBed = loadObj(obj_path=".\objects\CatBed.obj",
-                 position=(1.5, 1.0, 1.5), scale=(0.5, 0.5, 0.5))
-mouse = loadObj(obj_path=".\objects\mouse.obj", position=(
-    1.5, 1.05, 1.5), scale=(0.3, 0.3, 0.3))
-tunnel = loadObj(obj_path=r".\objects\tunnel.obj", position=(
-    0.9, 1.08, 0.9), scale=(1.5, 1.5, 1.5))
+# catBed = loadObj(obj_path=".\objects\CatBed.obj",
+#                  position=(1.5, 1.0, 1.5), scale=(0.5, 0.5, 0.5))
+# mouse = loadObj(obj_path=".\objects\mouse.obj", position=(
+#     1.5, 1.05, 1.5), scale=(0.3, 0.3, 0.3))
+# tunnel = loadObj(obj_path=r".\objects\tunnel.obj", position=(
+#     0.9, 1.08, 0.9), scale=(1.5, 1.5, 1.5))
 
 
 def corDeFundo(r, g, b, a):
@@ -74,7 +74,7 @@ def criarTriangulo(matriz, altura, comprimento):
         [-comprimento/2, 0],
     ]
     return matriz
-
+    
 
 def objetos():
     catBed.draw()
