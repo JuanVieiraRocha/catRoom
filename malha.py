@@ -3,6 +3,8 @@ import ctypes
 import glm
 import numpy as np
 from OpenGL.GL import *
+from criandoObjetos import abrindoVao, abrindoVbo
+from loadObj import load_obj
 
 VERT = """
 #version 330 core
@@ -129,3 +131,28 @@ class Cubo:
         shader.mat4("uModel", modelo)
         glBindVertexArray(self.vao)
         glDrawArrays(GL_TRIANGLES, 0, self.n)
+
+class MalhaOBJ:
+    def __init__(self, vertices, uvs, normais):
+        self.vertices = vertices
+        self.uvs = uvs
+        self.normais = normais
+        self.vao = glGenVertexArrays(1)
+        vbo = glGenBuffers(1)
+
+        glBindVertexArray(self.vao)
+        glBindBuffer(GL_ARRAY_BUFFER, vbo)
+        glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
+        glVertexAttribPointer(
+            0, 3, GL_FLOAT, GL_FALSE,
+            3 * 4, ctypes.c_void_p(0)
+        )
+        glEnableVertexAttribArray(0)
+        glBindVertexArray(0)
+
+    def desenhar(self, shader, modelo):
+        shader.mat4("uModel", modelo)
+        glBindVertexArray(self.vao)
+        glDrawArrays(GL_TRIANGLES, 0, len(self.vertices))
+        glBindVertexArray(0)
+        pass

@@ -11,12 +11,14 @@
 import math
 import random
 
+import loadObj
 import glfw
 import glm
 from OpenGL.GL import *
 
 from gato import Gato
-from malha import Cubo, Shader
+from malha import Cubo, Shader, MalhaOBJ
+from criandoObjetos import abrindoVbo, abrindoVao
 
 
 def main():
@@ -35,6 +37,10 @@ def main():
     gato = Gato(cubo)
     dinheiro = 0
     angulo_camera = 0.8
+
+    vertices, uvs, normais = loadObj.load_obj('objects/Quarto.obj')
+    quarto = MalhaOBJ(vertices, uvs, normais)
+    modelo_quarto = glm.translate(glm.vec3(0, 0.12, 0)) * glm.scale(glm.mat4(1), glm.vec3(0.12, 0.12, 0.12))
 
     def tecla(janela, key, scancode, acao, mods):
         nonlocal dinheiro
@@ -81,7 +87,7 @@ def main():
 
         # câmera girando em volta do gato
         alvo = gato.posicao + glm.vec3(0, 0.2, 0)
-        olho = alvo + glm.vec3(1.4 * math.sin(angulo_camera), 0.6, 1.4 * math.cos(angulo_camera))
+        olho = alvo + glm.vec3(1.0 * math.sin(angulo_camera), 1.1, 1.0 * math.cos(angulo_camera))
         shader.usar()
         shader.mat4("uView", glm.lookAt(olho, alvo, glm.vec3(0, 1, 0)))
         shader.mat4("uProj", glm.perspective(glm.radians(45), w / max(h, 1), 0.05, 50))
@@ -93,8 +99,7 @@ def main():
 
         shader.material((0.55, 0.42, 0.32))  # chão
         chao = glm.scale(glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
-        cubo.desenhar(shader, chao)
-
+        quarto.desenhar(shader, modelo_quarto)
         gato.desenhar(shader)
 
         glfw.set_window_title(janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")

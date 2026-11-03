@@ -13,25 +13,13 @@ matrizView = None
 vertices = []
 qtdDeVertices = 0
 
-eye = [0.4, 1.8, 1.0]
+eye = [0.4, 30.0, 25.0]
 at = [0.4, 0.6, -0.05]
 up = [0.0, 1.0, 0.0]
 
 
 def init():
     global vaoId, shaderId, matrizView, vertices, qtdDeVertices, eye, at, up
-    # # Criando chão 3D
-    # vertices = criandoObjetos.criarChao(vertices, 0.2, 2.0, 1.0, 0.2, 2.0)
-    # dimensoesVertice = len(vertices[0])
-    # qtdDeVertices = len(vertices)
-
-    # # Boa prática, fechar isso aqui com glBindVertexArray(0) depois de criar o VAO
-    # vaoId = criandoObjetos.abrindoVao(1)
-    # criandoObjetos.abrindoVbo(1, np.array(vertices, np.dtype(
-    #     np.float32)), openGL.GL_STATIC_DRAW, 0, dimensoesVertice)
-
-    # openGL.glBindBuffer(openGL.GL_ARRAY_BUFFER, 0)  # Fehcando VBO
-    # openGL.glBindVertexArray(0)                    # Fechando VAO
 
     vertices, uvs, normals = loadObj.load_obj('objects/Quarto.obj')
     vaoId = criandoObjetos.abrindoVao(1)
@@ -68,6 +56,7 @@ def render():
         0.1,
         50.0,
     )
+
     localMatriz = openGL.glGetUniformLocation(shaderId, 'u_view_projection')
     matrizViewProjecao = matrizProjecao @ matrizView
     openGL.glUniformMatrix4fv(
@@ -77,7 +66,7 @@ def render():
         matrizViewProjecao.flatten(order='F'),
     )
     openGL.glBindVertexArray(vaoId)
-    openGL.glDrawArrays(openGL.GL_TRIANGLE_STRIP, 0, qtdDeVertices)
+    openGL.glDrawArrays(openGL.GL_TRIANGLES, 0, qtdDeVertices)
     openGL.glBindVertexArray(0)
     openGL.glUseProgram(0)
 
