@@ -16,7 +16,9 @@ import glm
 from OpenGL.GL import *
 
 from gato import Gato
-from malha import Cubo, Shader
+from malha import Cubo, Shader, carregar_textura
+import os
+
 
 
 def main():
@@ -33,6 +35,25 @@ def main():
     shader = Shader()
     cubo = Cubo()
     gato = Gato(cubo)
+
+    # Carrega a textura do pelo do gato
+    caminho_textura = os.path.join(
+        os.path.dirname(__file__),
+        "textures",
+        "pelagemGato.jpg"
+    )
+
+    textura_gato = carregar_textura(caminho_textura)
+
+    shader.usar()
+
+    local_textura = glGetUniformLocation(
+        shader.id,
+        "uTextura"
+    )
+
+    glUniform1i(local_textura, 0)
+
     dinheiro = 0
     angulo_camera = 0.8
 
@@ -89,13 +110,27 @@ def main():
         shader.vec3("uLuz.posicao", (1.2, 2.5, 1.5))
         shader.vec3("uLuz.cor", (1, 1, 1))
         shader.vec3("uLuzAmbiente", (0.35, 0.35, 0.4))
+        # Desenha o chão sem textura
         shader.bool("uUsarTextura", False)
 
-        shader.material((0.55, 0.42, 0.32))  # chão
-        chao = glm.scale(glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
+        shader.material((0.55, 0.42, 0.32))
+        chao = glm.scale(
+            glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)),
+            glm.vec3(3, 0.05, 3)
+        )
         cubo.desenhar(shader, chao)
 
+        # Ativa a textura para o gato
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, textura_gato)
+
+        shader.bool("uUsarTextura", True)
+
         gato.desenhar(shader)
+
+        # Desvincula a textura após desenhar o gato
+        glBindTexture(GL_TEXTURE_2D, 0)
+        shader.bool("uUsarTextura", False)
 
         glfw.set_window_title(janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")
         glfw.swap_buffers(janela)
