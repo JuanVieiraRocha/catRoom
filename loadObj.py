@@ -23,3 +23,6 @@ class loadObj:
         pywavefront.visualization.draw(self.obj)
 
         glPopMatrix()
+
+        print("\n--- OBJETOS E MATERIAIS ---")
+
