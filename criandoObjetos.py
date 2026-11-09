@@ -2,14 +2,17 @@ import OpenGL.GL as openGL
 import OpenGL.GL.shaders as gls
 import numpy as np
 import ctypes
+from pathlib import Path
 from loadObj import loadObj
 
-catBed = loadObj(obj_path=".\objects\CatBed.obj",
+OBJ_DIR = Path(__file__).resolve().parent / "objects"
+
+catBed = loadObj(obj_path=str(OBJ_DIR / "CatBed.obj"),
                  position=(1.5, 1.0, 1.5), scale=(0.5, 0.5, 0.5))
-mouse = loadObj(obj_path=".\objects\mouse.obj", position=(
-    1.5, 1.05, 1.5), scale=(0.3, 0.3, 0.3))
-tunnel = loadObj(obj_path=r".\objects\tunnel.obj", position=(
-    0.9, 1.08, 0.9), scale=(1.5, 1.5, 1.5))
+mouse = loadObj(obj_path=str(OBJ_DIR / "mouse.obj"), position=(
+    1.5, 1.07, 1.5), scale=(0.16, 0.16, 0.16))
+tunnel = loadObj(obj_path=str(OBJ_DIR / "tunnel.obj"), position=(
+    0.9, 1.076, 0.9), scale=(1.8, 1.8, 1.8))
 
 
 def corDeFundo(r, g, b, a):

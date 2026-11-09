@@ -15,8 +15,25 @@ import glfw
 import glm
 from OpenGL.GL import *
 
+from criandoObjetos import catBed, mouse, tunnel
 from gato import Gato
-from malha import Cubo, Shader
+from malha import Cubo, MalhaOBJ, Shader
+
+
+def matriz_objeto(objeto):
+    # Os objetos foram posicionados para o chão antigo, centrado em (1.1, 1, 1.1).
+    posicao = glm.vec3(*objeto.position) - glm.vec3(1.1, 1.0, 1.1)
+    modelo = glm.translate(glm.mat4(1), posicao)
+    modelo = glm.rotate(
+        modelo, glm.radians(objeto.rotation[0]), glm.vec3(1, 0, 0)
+    )
+    modelo = glm.rotate(
+        modelo, glm.radians(objeto.rotation[1]), glm.vec3(0, 1, 0)
+    )
+    modelo = glm.rotate(
+        modelo, glm.radians(objeto.rotation[2]), glm.vec3(0, 0, 1)
+    )
+    return glm.scale(modelo, glm.vec3(*objeto.scale))
 
 
 def main():
@@ -33,6 +50,9 @@ def main():
     shader = Shader()
     cubo = Cubo()
     gato = Gato(cubo)
+    cama = MalhaOBJ(catBed.obj)
+    rato = MalhaOBJ(mouse.obj)
+    tunel = MalhaOBJ(tunnel.obj)
     dinheiro = 0
     angulo_camera = 0.8
 
@@ -81,10 +101,12 @@ def main():
 
         # câmera girando em volta do gato
         alvo = gato.posicao + glm.vec3(0, 0.2, 0)
-        olho = alvo + glm.vec3(1.4 * math.sin(angulo_camera), 0.6, 1.4 * math.cos(angulo_camera))
+        olho = alvo + glm.vec3(0.8 * math.sin(angulo_camera),
+                               0.2, 0.8 * math.cos(angulo_camera))
         shader.usar()
         shader.mat4("uView", glm.lookAt(olho, alvo, glm.vec3(0, 1, 0)))
-        shader.mat4("uProj", glm.perspective(glm.radians(45), w / max(h, 1), 0.05, 50))
+        shader.mat4("uProj", glm.perspective(
+            glm.radians(45), w / max(h, 1), 0.05, 50))
         shader.vec3("uViewPos", olho)
         shader.vec3("uLuz.posicao", (1.2, 2.5, 1.5))
         shader.vec3("uLuz.cor", (1, 1, 1))
@@ -92,12 +114,19 @@ def main():
         shader.bool("uUsarTextura", False)
 
         shader.material((0.55, 0.42, 0.32))  # chão
-        chao = glm.scale(glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
+        chao = glm.scale(glm.translate(
+            glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
         cubo.desenhar(shader, chao)
 
         gato.desenhar(shader)
 
-        glfw.set_window_title(janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")
+        shader.bool("uUsarTextura", False)
+        cama.desenhar(shader, matriz_objeto(catBed))
+        rato.desenhar(shader, matriz_objeto(mouse))
+        tunel.desenhar(shader, matriz_objeto(tunnel))
+
+        glfw.set_window_title(
+            janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")
         glfw.swap_buffers(janela)
         glfw.poll_events()
 
