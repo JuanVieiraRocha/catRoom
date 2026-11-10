@@ -3,6 +3,51 @@ import ctypes
 import glm
 import numpy as np
 from OpenGL.GL import *
+from PIL import Image
+import os
+
+def carregar_textura(caminho):
+    imagem = Image.open(caminho).convert("RGB")
+    imagem = imagem.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+    largura, altura = imagem.size
+    dados = imagem.tobytes()
+
+    textura = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, textura)
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        largura,
+        altura,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        dados
+    )
+
+    glGenerateMipmap(GL_TEXTURE_2D)
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR_MIPMAP_LINEAR
+    )
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR
+    )
+
+    glBindTexture(GL_TEXTURE_2D, 0)
+
+    return textura
 
 VERT = """
 #version 330 core
@@ -37,7 +82,11 @@ uniform bool uUsarTextura;
 uniform sampler2D uTextura;
 out vec4 FragColor;
 void main() {
-    vec3 base = uUsarTextura ? texture(uTextura, vUV).rgb : uMaterial.cor;
+    vec3 base = uMaterial.cor;
+    if (uUsarTextura) {
+        vec3 textura = texture(uTextura, vUV).rgb;
+        base = textura * uMaterial.cor;
+    }
     vec3 n = normalize(vNormal);
     vec3 l = normalize(uLuz.posicao - vPos);
     vec3 v = normalize(uViewPos - vPos);

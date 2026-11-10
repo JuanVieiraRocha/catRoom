@@ -8,6 +8,8 @@
   Setas esquerda/direita  girar a câmera
   ESC  sair
 """
+from malha import carregar_textura
+import os
 import math
 import random
 
@@ -53,6 +55,25 @@ def main():
     cama = MalhaOBJ(catBed.obj)
     rato = MalhaOBJ(mouse.obj)
     tunel = MalhaOBJ(tunnel.obj)
+
+    # Carrega a textura do pelo do gato
+    caminho_textura = os.path.join(
+        os.path.dirname(__file__),
+        "textures",
+        "pelagemGato.jpg"
+    )
+
+    textura_gato = carregar_textura(caminho_textura)
+
+    shader.usar()
+
+    local_textura = glGetUniformLocation(
+        shader.id,
+        "uTextura"
+    )
+
+    glUniform1i(local_textura, 0)
+
     dinheiro = 0
     angulo_camera = 0.8
 
@@ -111,12 +132,24 @@ def main():
         shader.vec3("uLuz.posicao", (1.2, 2.5, 1.5))
         shader.vec3("uLuz.cor", (1, 1, 1))
         shader.vec3("uLuzAmbiente", (0.35, 0.35, 0.4))
+        # Desenha o chão sem textura
         shader.bool("uUsarTextura", False)
 
         shader.material((0.55, 0.42, 0.32))  # chão
         chao = glm.scale(glm.translate(
             glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
+        shader.material((0.55, 0.42, 0.32))
+        chao = glm.scale(
+            glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)),
+            glm.vec3(3, 0.05, 3)
+        )
         cubo.desenhar(shader, chao)
+
+        # Ativa a textura para o gato
+        glActiveTexture(GL_TEXTURE0)
+        glBindTexture(GL_TEXTURE_2D, textura_gato)
+
+        shader.bool("uUsarTextura", True)
 
         gato.desenhar(shader)
 
@@ -124,6 +157,12 @@ def main():
         cama.desenhar(shader, matriz_objeto(catBed))
         rato.desenhar(shader, matriz_objeto(mouse))
         tunel.desenhar(shader, matriz_objeto(tunnel))
+
+        glfw.set_window_title(
+            janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")
+        # Desvincula a textura após desenhar o gato
+        glBindTexture(GL_TEXTURE_2D, 0)
+        shader.bool("uUsarTextura", False)
 
         glfw.set_window_title(
             janela, f"Gato  |  {gato.estado}  |  dinheiro: ${dinheiro}")
