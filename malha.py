@@ -3,6 +3,51 @@ import ctypes
 import glm
 import numpy as np
 from OpenGL.GL import *
+from PIL import Image
+import os
+
+def carregar_textura(caminho):
+    imagem = Image.open(caminho).convert("RGB")
+    imagem = imagem.transpose(Image.Transpose.FLIP_TOP_BOTTOM)
+
+    largura, altura = imagem.size
+    dados = imagem.tobytes()
+
+    textura = glGenTextures(1)
+    glBindTexture(GL_TEXTURE_2D, textura)
+
+    glTexImage2D(
+        GL_TEXTURE_2D,
+        0,
+        GL_RGB,
+        largura,
+        altura,
+        0,
+        GL_RGB,
+        GL_UNSIGNED_BYTE,
+        dados
+    )
+
+    glGenerateMipmap(GL_TEXTURE_2D)
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT)
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT)
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MIN_FILTER,
+        GL_LINEAR_MIPMAP_LINEAR
+    )
+
+    glTexParameteri(
+        GL_TEXTURE_2D,
+        GL_TEXTURE_MAG_FILTER,
+        GL_LINEAR
+    )
+
+    glBindTexture(GL_TEXTURE_2D, 0)
+
+    return textura
 
 VERT = """
 #version 330 core
@@ -37,7 +82,11 @@ uniform bool uUsarTextura;
 uniform sampler2D uTextura;
 out vec4 FragColor;
 void main() {
-    vec3 base = uUsarTextura ? texture(uTextura, vUV).rgb : uMaterial.cor;
+    vec3 base = uMaterial.cor;
+    if (uUsarTextura) {
+        vec3 textura = texture(uTextura, vUV).rgb;
+        base = textura * uMaterial.cor;
+    }
     vec3 n = normalize(vNormal);
     vec3 l = normalize(uLuz.posicao - vPos);
     vec3 v = normalize(uViewPos - vPos);
@@ -129,3 +178,114 @@ class Cubo:
         shader.mat4("uModel", modelo)
         glBindVertexArray(self.vao)
         glDrawArrays(GL_TRIANGLES, 0, self.n)
+
+
+class MalhaOBJ:
+    def __init__(self, cena):
+        self.partes = []
+
+        for mesh in cena.meshes.values():
+            for material in mesh.materials:
+                dados = np.asarray(material.vertices, dtype=np.float32)
+                if dados.size == 0:
+                    continue
+
+                campos = {}
+                deslocamento = 0
+                for campo in material.vertex_format.split("_"):
+                    tipo = campo[0]
+                    quantidade = int(campo[1:-1])
+                    campos[tipo] = (deslocamento, quantidade)
+                    deslocamento += quantidade
+
+                if deslocamento == 0 or dados.size % deslocamento != 0:
+                    raise ValueError(
+                        f"Formato de vértices inválido: {material.vertex_format}"
+                    )
+
+                dados = dados.reshape(-1, deslocamento)
+                if "V" not in campos or campos["V"][1] != 3:
+                    raise ValueError(
+                        f"Esperava posições V3F; recebi {material.vertex_format}"
+                    )
+
+                inicio, tamanho = campos["V"]
+                posicoes = dados[:, inicio:inicio + tamanho]
+
+                if "N" in campos and campos["N"][1] == 3:
+                    inicio, tamanho = campos["N"]
+                    normais = dados[:, inicio:inicio + tamanho]
+                else:
+                    if len(posicoes) % 3 != 0:
+                        raise ValueError(
+                            "A malha sem normais não contém triângulos completos"
+                        )
+
+                    triangulos = posicoes.reshape(-1, 3, 3)
+                    normais_face = np.cross(
+                        triangulos[:, 1] - triangulos[:, 0],
+                        triangulos[:, 2] - triangulos[:, 0],
+                    )
+                    comprimentos = np.linalg.norm(
+                        normais_face, axis=1, keepdims=True
+                    )
+                    normais_face = np.divide(
+                        normais_face,
+                        comprimentos,
+                        out=np.zeros_like(normais_face),
+                        where=comprimentos != 0,
+                    )
+                    normais = np.repeat(normais_face, 3, axis=0)
+
+                if "T" in campos and campos["T"][1] >= 2:
+                    inicio, _ = campos["T"]
+                    uv = dados[:, inicio:inicio + 2]
+                else:
+                    uv = np.zeros((len(posicoes), 2), dtype=np.float32)
+
+                vertices = np.concatenate(
+                    (posicoes, normais, uv), axis=1
+                ).astype(np.float32, copy=False)
+                cor = np.asarray(material.diffuse, dtype=np.float32)[:3]
+                if cor.shape != (3,):
+                    raise ValueError(
+                        f"Cor difusa inválida no material {material.name}: {cor}"
+                    )
+
+                vao = glGenVertexArrays(1)
+                vbo = glGenBuffers(1)
+                glBindVertexArray(vao)
+                glBindBuffer(GL_ARRAY_BUFFER, vbo)
+                glBufferData(
+                    GL_ARRAY_BUFFER,
+                    vertices.nbytes,
+                    vertices,
+                    GL_STATIC_DRAW,
+                )
+
+                passo = 8 * vertices.itemsize
+                for local, tamanho, deslocamento_bytes in (
+                    (0, 3, 0),
+                    (1, 3, 12),
+                    (2, 2, 24),
+                ):
+                    glVertexAttribPointer(
+                        local,
+                        tamanho,
+                        GL_FLOAT,
+                        GL_FALSE,
+                        passo,
+                        ctypes.c_void_p(deslocamento_bytes),
+                    )
+                    glEnableVertexAttribArray(local)
+
+                glBindVertexArray(0)
+                self.partes.append((vao, len(vertices), tuple(cor)))
+
+    def desenhar(self, shader, modelo):
+        shader.mat4("uModel", modelo)
+        for vao, quantidade, cor in self.partes:
+            shader.material(cor)
+            glBindVertexArray(vao)
+            glDrawArrays(GL_TRIANGLES, 0, quantidade)
+        glBindVertexArray(0)

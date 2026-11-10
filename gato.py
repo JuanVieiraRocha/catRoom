@@ -10,7 +10,7 @@ Cada parte é o mesmo cubo unitário, desenhado com a matriz:
 import math
 import glm
 
-PX = 0.025  # 1 pixel = 2,5 cm
+PX = 0.01  # 1 pixel = 2,5 cm
 
 # 3 pelagens
 PELAGENS = {
@@ -25,12 +25,21 @@ PELAGENS = {
 # ações com tempo de duração em segundos e o dinheiro que rendem
 ACOES = {"comendo": (3.0, 10), "carinho": (2.5, 5), "brincando": (3.0, 8)}
 
+
 class Parte:
-    def __init__(self, tamanho, pivo, centro=(0, 0, 0), cor=(1, 1, 1)):
+    def __init__(
+        self,
+        tamanho,
+        pivo,
+        centro=(0, 0, 0),
+        cor=(1, 1, 1),
+        texturizada=False
+    ):
         self.tamanho = glm.vec3(tamanho)
         self.pivo = glm.vec3(pivo)
         self.centro = glm.vec3(centro)
         self.cor = cor
+        self.texturizada = texturizada
         self.rotacao = glm.vec3(0)  # ângulos em x, y, z (radianos)
         self.escala = glm.vec3(1)   # usada para fechar os olhos
         self.filhas = []
@@ -43,6 +52,8 @@ class Parte:
 
         caixa = glm.translate(junta, self.centro)
         caixa = glm.scale(caixa, self.tamanho * self.escala)
+        shader.bool("uUsarTextura", self.texturizada)
+
         shader.material(self.cor)
         cubo.desenhar(shader, caixa)
 
@@ -57,7 +68,7 @@ class Gato:
         self.cubo = cubo
         self.posicao = glm.vec3(posicao)
         self.direcao = 0.0       # ângulo em torno de Y (0 = olhando para +Z)
-        self.estado = "parado" 
+        self.estado = "parado"
         self.destino = None
         self.tempo = 0.0
         self.tempo_acao = 0.0
@@ -68,31 +79,34 @@ class Gato:
         c = PELAGENS[pelagem]
         self.pelagem = pelagem
 
-        self.corpo = Parte((4, 6, 16), (0, 9, 0), cor=c["pelo"])
+        self.corpo = Parte((4, 6, 16), (0, 9, 0), cor=c["pelo"], texturizada=True)
 
-        self.cabeca = Parte((5, 4, 5), (0, 2, 7.5), (0, 1, 2), c["pelo"])
-        focinho = Parte((3, 2, 1), (0, -0.5, 4.9), cor=c["claro"])
+        self.cabeca = Parte((5, 4, 5), (0, 2, 7.5), (0, 1, 2), c["pelo"], texturizada=True)
+        focinho = Parte((3, 2, 1), (0, -0.5, 4.9), cor=c["claro"], texturizada=True)
         nariz = Parte((1, 0.6, 0.3), (0, 0.6, 0.6), cor=(0.95, 0.55, 0.60))
         focinho.filhas = [nariz]
-        orelha_e = Parte((1, 1, 2), (1.5, 3.5, 1.5), cor=c["escuro"])
-        orelha_d = Parte((1, 1, 2), (-1.5, 3.5, 1.5), cor=c["escuro"])
+        orelha_e = Parte((1, 1, 2), (1.5, 3.5, 1.5), cor=c["escuro"], texturizada=True)
+        orelha_d = Parte((1, 1, 2), (-1.5, 3.5, 1.5), cor=c["escuro"], texturizada=True)
         self.olho_e = Parte((1, 1, 0.2), (1.5, 1.6, 4.55), cor=c["olho"])
         self.olho_d = Parte((1, 1, 0.2), (-1.5, 1.6, 4.55), cor=c["olho"])
-        self.cabeca.filhas = [focinho, orelha_e, orelha_d, self.olho_e, self.olho_d]
+        self.cabeca.filhas = [focinho, orelha_e,
+                              orelha_d, self.olho_e, self.olho_d]
 
         # patas: articulação no quadril, caixa 3 px abaixo dela
-        self.pata_fe = Parte((2, 6, 2), (1, -3, 6), (0, -3, 0), c["pelo"])
-        self.pata_fd = Parte((2, 6, 2), (-1, -3, 6), (0, -3, 0), c["pelo"])
-        self.pata_te = Parte((2, 6, 2), (1, -3, -6), (0, -3, 0), c["pelo"])
-        self.pata_td = Parte((2, 6, 2), (-1, -3, -6), (0, -3, 0), c["pelo"])
+        self.pata_fe = Parte((2, 6, 2), (1, -3, 6), (0, -3, 0), c["pelo"], texturizada=True)
+        self.pata_fd = Parte((2, 6, 2), (-1, -3, 6), (0, -3, 0), c["pelo"], texturizada=True)
+        self.pata_te = Parte((2, 6, 2), (1, -3, -6), (0, -3, 0), c["pelo"], texturizada=True)
+        self.pata_td = Parte((2, 6, 2), (-1, -3, -6), (0, -3, 0), c["pelo"], texturizada=True)
 
         # rabo em dois pedaços: o segundo é filho do primeiro
-        self.rabo1 = Parte((1, 1, 8), (0, 2.5, -7.5), (0, 0, -4), c["pelo"])
-        self.rabo2 = Parte((1, 1, 8), (0, 0, -8), (0, 0, -4), c["pelo"])
+        self.rabo1 = Parte((1, 1, 8), (0, 2.5, -7.5), (0, 0, -4), c["pelo"], texturizada=True)
+        self.rabo2 = Parte((1, 1, 8), (0, 0, -8), (0, 0, -4), c["pelo"], texturizada=True)
         self.rabo1.filhas = [self.rabo2]
 
-        self.corpo.filhas = [self.cabeca, self.pata_fe, self.pata_fd, self.pata_te, self.pata_td, self.rabo1]
-        self.partes = [self.corpo, self.cabeca, self.pata_fe, self.pata_fd, self.pata_te, self.pata_td, self.rabo1, self.rabo2]
+        self.corpo.filhas = [self.cabeca, self.pata_fe,
+                             self.pata_fd, self.pata_te, self.pata_td, self.rabo1]
+        self.partes = [self.corpo, self.cabeca, self.pata_fe,
+                       self.pata_fd, self.pata_te, self.pata_td, self.rabo1, self.rabo2]
 
     def trocar_pelagem(self, pelagem):
         self.montar(pelagem)
@@ -161,27 +175,36 @@ class Gato:
             altura = 5.8
             alvo[self.corpo].x = -0.5  # levanta a frente do corpo
             alvo[self.cabeca].x = 0.5  # cabeça volta a olhar para frente
-            alvo[self.pata_fe].x = alvo[self.pata_fd].x = 0.5   # patas da frente em pé
-            alvo[self.pata_te].x = alvo[self.pata_td].x = -1.07 # patas de trás deitadas
+            # patas da frente em pé
+            alvo[self.pata_fe].x = alvo[self.pata_fd].x = 0.5
+            alvo[self.pata_te].x = alvo[self.pata_td].x = - \
+                1.07  # patas de trás deitadas
             alvo[self.rabo1] = glm.vec3(0.35, 0.5, 0)
             alvo[self.rabo2] = glm.vec3(0, 0.9, 0)
 
         elif self.estado == "comendo":
             altura = 8.0
-            alvo[self.corpo].x = 0.25                             # abaixa a frente
-            alvo[self.cabeca].x = 0.8 + 0.08 * math.sin(t * 8)    # cabeça no pote
-            alvo[self.pata_fe].x = alvo[self.pata_fd].x = -0.25   # patas retas de novo
+            # abaixa a frente
+            alvo[self.corpo].x = 0.25
+            alvo[self.cabeca].x = 0.8 + 0.08 * \
+                math.sin(t * 8)    # cabeça no pote
+            alvo[self.pata_fe].x = alvo[self.pata_fd].x = - \
+                0.25   # patas retas de novo
 
         elif self.estado == "carinho":
             olhos_fechados = True
-            alvo[self.cabeca].z = 0.25 * math.sin(t * 3)                # cabeça inclinando
-            alvo[self.rabo1] = glm.vec3(1.1, 0.4 * math.sin(t * 9), 0)  # rabo abanando
+            # cabeça inclinando
+            alvo[self.cabeca].z = 0.25 * math.sin(t * 3)
+            alvo[self.rabo1] = glm.vec3(
+                1.1, 0.4 * math.sin(t * 9), 0)  # rabo abanando
 
         elif self.estado == "brincando":
             tapa = abs(math.sin(t * 6))
             altura = 8.0
-            alvo[self.corpo].x = 0.15                             # abaixa a frente
-            alvo[self.pata_fd].x = -0.15 - 1.2 * tapa             # pata dá tapinhas
+            # abaixa a frente
+            alvo[self.corpo].x = 0.15
+            alvo[self.pata_fd].x = -0.15 - 1.2 * \
+                tapa             # pata dá tapinhas
             alvo[self.rabo1] = glm.vec3(0.6, 0.5 * math.sin(t * 6), 0)
 
         # cada parte se aproxima um pouco do alvo a cada frame (transição suave)
