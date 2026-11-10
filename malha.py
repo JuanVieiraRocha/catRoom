@@ -51,6 +51,33 @@ void main() {
 }
 """
 
+POINTLIGHT = """
+#version 330 core
+struct Luz { vec3 posicao; vec3 cor; };
+struct Material { vec3 cor; float especular; float brilho; };
+in vec3 vPos;
+in vec3 vNormal;
+in vec2 vUV;
+uniform Luz uLuz;
+uniform vec3 uLuzAmbiente;
+uniform Material uMaterial;
+uniform vec3 uViewPos;
+uniform bool uUsarTextura;
+uniform sampler2D uTextura;
+out vec4 FragColor;
+
+void main(){
+    vec3 base = uUsarTextura ? texture(uTextura, vUV).rgb : uMaterial.cor;
+    vec3 n = normalize(vNormal);
+    vec3 l = normalize(uLuz.posicao - vPos);
+    vec3 v = normalize(uViewPos - vPos);
+    vec3 r = reflect(-l, n);
+    vec3 ambiente = uLuzAmbiente * base
+    vec3 difusa
+    }
+
+"""
+
 
 class Shader:
     def __init__(self, vert=VERT, frag=FRAG):
@@ -95,6 +122,8 @@ class Shader:
         self.vec3("uMaterial.cor", cor)
         self.float("uMaterial.especular", especular)
         self.float("uMaterial.brilho", brilho)
+class pointLight():
+    pass
 
 
 class Cubo:
@@ -140,14 +169,28 @@ class MalhaOBJ:
         self.vao = glGenVertexArrays(1)
         vbo = glGenBuffers(1)
 
+
+        dados = np.ascontiguousarray(
+        np.concatenate((vertices, normais, uvs), axis=1),
+        dtype=np.float32
+)
+
         glBindVertexArray(self.vao)
         glBindBuffer(GL_ARRAY_BUFFER, vbo)
-        glBufferData(GL_ARRAY_BUFFER, vertices.nbytes, vertices, GL_STATIC_DRAW)
-        glVertexAttribPointer(
-            0, 3, GL_FLOAT, GL_FALSE,
-            3 * 4, ctypes.c_void_p(0)
-        )
-        glEnableVertexAttribArray(0)
+        glBufferData(GL_ARRAY_BUFFER, dados.nbytes, dados, GL_STATIC_DRAW)
+
+        stride = 8 * 4
+        for local, tamanho, deslocamento in (
+            (0, 3, 0),   # posição
+            (1, 3, 12),  # normal
+            (2, 2, 24),  # UV
+        ):
+            glVertexAttribPointer(
+                local, tamanho, GL_FLOAT, GL_FALSE,
+                stride, ctypes.c_void_p(deslocamento)
+            )
+            glEnableVertexAttribArray(local)
+
         glBindVertexArray(0)
 
     def desenhar(self, shader, modelo):

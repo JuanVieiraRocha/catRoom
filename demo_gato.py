@@ -34,13 +34,25 @@ def main():
 
     shader = Shader()
     cubo = Cubo()
-    gato = Gato(cubo)
+    gato = Gato(cubo, (0.00, 0.25, 0.00))
     dinheiro = 0
     angulo_camera = 0.8
 
     vertices, uvs, normais = loadObj.load_obj('objects/Quarto.obj')
     quarto = MalhaOBJ(vertices, uvs, normais)
-    modelo_quarto = glm.translate(glm.vec3(0, 0.12, 0)) * glm.scale(glm.mat4(1), glm.vec3(0.12, 0.12, 0.12))
+    limites_min = vertices.min(axis=0)
+    limites_max = vertices.max(axis=0)
+    escala_x = 4.5 / (limites_max[0] - limites_min[0])
+    escala_y = 0.80
+    escala_z = 4.5 / (limites_max[2] - limites_min[2])
+    posicao_quarto = glm.vec3(
+        -(limites_min[0] + limites_max[0]) * escala_x / 2,
+        -limites_min[1] * escala_y,
+        -(limites_min[2] + limites_max[2]) * escala_z / 2,
+    )
+    modelo_quarto = glm.translate(posicao_quarto) * glm.scale(
+        glm.mat4(1), glm.vec3(escala_x, escala_y, escala_z)
+    )
 
     def tecla(janela, key, scancode, acao, mods):
         nonlocal dinheiro
@@ -87,17 +99,17 @@ def main():
 
         # câmera girando em volta do gato
         alvo = gato.posicao + glm.vec3(0, 0.2, 0)
-        olho = alvo + glm.vec3(1.0 * math.sin(angulo_camera), 1.1, 1.0 * math.cos(angulo_camera))
+        olho = alvo + glm.vec3(1.75 * math.sin(angulo_camera), 1.0, 1.75 * math.cos(angulo_camera))
         shader.usar()
         shader.mat4("uView", glm.lookAt(olho, alvo, glm.vec3(0, 1, 0)))
         shader.mat4("uProj", glm.perspective(glm.radians(45), w / max(h, 1), 0.05, 50))
         shader.vec3("uViewPos", olho)
-        shader.vec3("uLuz.posicao", (1.2, 2.5, 1.5))
+        shader.vec3("uLuz.posicao", (0.0, 5.0, 0.0))
         shader.vec3("uLuz.cor", (1, 1, 1))
         shader.vec3("uLuzAmbiente", (0.35, 0.35, 0.4))
         shader.bool("uUsarTextura", False)
 
-        shader.material((0.55, 0.42, 0.32))  # chão
+        shader.material((0.75, 0.72, 0.62), 0.50, 16.0)  # chão
         chao = glm.scale(glm.translate(glm.mat4(1), glm.vec3(0, -0.025, 0)), glm.vec3(3, 0.05, 3))
         quarto.desenhar(shader, modelo_quarto)
         gato.desenhar(shader)
