@@ -31,9 +31,9 @@ def main():
 
     limites_min = vertices.min(axis=0)
     limites_max = vertices.max(axis=0)
-    escala_x = 25 / (limites_max[0] - limites_min[0])
-    escala_y = 0.30
-    escala_z = 25 / (limites_max[2] - limites_min[2])
+    escala_x = 8.0 / (limites_max[0] - limites_min[0])
+    escala_y = 0.5
+    escala_z = 8.0 / (limites_max[2] - limites_min[2])
 
     posicao_quarto = glm.vec3(
         -(limites_min[0] + limites_max[0]) * escala_x / 2,
@@ -43,17 +43,22 @@ def main():
     modelo_quarto = glm.translate(posicao_quarto) * glm.scale(
         glm.mat4(1), glm.vec3(escala_x, escala_y, escala_z)
     )
+
     # Câmera
-    alvo = [0,(limites_max[1] - limites_min[1]) * escala_y / 2, 0]
+    alvo = [3.5,(limites_max[1] - limites_min[1]) * escala_y / 2, 3.5]
     angulo_camera = math.pi / 4
     raio_camera = math.hypot(5.0, 5.0)
-    altura_camera = 10.0
+    altura_camera = 5.0
     olho = [
-        10.0 + raio_camera * math.sin(angulo_camera),
+        alvo[0] + raio_camera * math.sin(angulo_camera),
         alvo[1] + altura_camera,
-        10.0 + raio_camera * math.cos(angulo_camera),
+        alvo[2] + raio_camera * math.cos(angulo_camera),
     ]
     tempo_anterior = glfw.get_time()
+    altura_visao = 22.0
+    velocidade_zoom = 12.0
+    altura_visao_min = 5.0
+    altura_visao_max = 40.0
 
     while not glfw.window_should_close(janela):
         glfw.poll_events()
@@ -61,6 +66,11 @@ def main():
         delta_tempo = min(tempo_atual - tempo_anterior, 0.05)
         tempo_anterior = tempo_atual
         olho, alvo = projecao.moverCamera(janela, olho, alvo, delta_tempo)
+        if glfw.get_key(janela, glfw.KEY_W) == glfw.PRESS:
+            altura_visao -= velocidade_zoom * delta_tempo
+        if glfw.get_key(janela, glfw.KEY_S) == glfw.PRESS:
+            altura_visao += velocidade_zoom * delta_tempo
+        altura_visao = max(altura_visao_min, min(altura_visao, altura_visao_max))
         if glfw.get_key(janela, glfw.KEY_LEFT) == glfw.PRESS:
             angulo_camera -= 1.5 * delta_tempo
         if glfw.get_key(janela, glfw.KEY_RIGHT) == glfw.PRESS:
@@ -76,11 +86,10 @@ def main():
             continue
 
         glViewport(0, 0, largura, altura)
-        glClearColor(0.75, 0.82, 0.88, 1.0)
+        glClearColor(0.10, 0.22, 0.07, 1.0) # rgba(26, 57, 19, 0.8)
         glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT)
 
         aspect_ratio = largura / altura
-        altura_visao = 22.0
         projecao_isometrica = glm.ortho(
             -altura_visao * aspect_ratio / 2,
             altura_visao * aspect_ratio / 2,

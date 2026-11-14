@@ -25,13 +25,13 @@ def moverCamera(janela, eye, at, delta_tempo, velocidade=3.0):
     direita = np.cross(frente, np.array([0.0, 1.0, 0.0], dtype=np.float32))
 
     deslocamento = np.zeros(3, dtype=np.float32)
-    if glfw.get_key(janela, glfw.KEY_UP) == glfw.PRESS or glfw.get_key(janela, glfw.KEY_W) == glfw.PRESS:
+    if glfw.get_key(janela, glfw.KEY_UP) == glfw.PRESS:
         deslocamento += frente
-    if glfw.get_key(janela, glfw.KEY_DOWN) == glfw.PRESS or glfw.get_key(janela, glfw.KEY_S) == glfw.PRESS:
+    if glfw.get_key(janela, glfw.KEY_DOWN) == glfw.PRESS:
         deslocamento -= frente
-    if glfw.get_key(janela, glfw.KEY_RIGHT) == glfw.PRESS or glfw.get_key(janela, glfw.KEY_D) == glfw.PRESS:
+    if glfw.get_key(janela, glfw.KEY_RIGHT) == glfw.PRESS:
         deslocamento += direita
-    if glfw.get_key(janela, glfw.KEY_LEFT) == glfw.PRESS or glfw.get_key(janela, glfw.KEY_A) == glfw.PRESS:
+    if glfw.get_key(janela, glfw.KEY_LEFT) == glfw.PRESS:
         deslocamento -= direita
 
     comprimento = np.linalg.norm(deslocamento)
