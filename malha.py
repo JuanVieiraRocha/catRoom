@@ -5,6 +5,7 @@ import numpy as np
 from OpenGL.GL import *
 from criandoObjetos import abrindoVao, abrindoVbo
 from loadObj import load_obj
+from PIL import Image
 
 VERT = """
 #version 330 core
@@ -117,6 +118,9 @@ class Shader:
 
     def bool(self, nome, b):
         glUniform1i(self._loc(nome), int(b))
+    
+    def sampler2D(self, nome, unidade):
+        glUniform1i(self._loc(nome), unidade)
 
     def material(self, cor, especular=0.1, brilho=8.0):
         self.vec3("uMaterial.cor", cor)
@@ -195,7 +199,37 @@ class MalhaOBJ:
 
     def desenhar(self, shader, modelo):
         shader.mat4("uModel", modelo)
+        glBindTextureUnit(0, self.texId)
+        glBindTexture(GL_TEXTURE_2D, self.texId)
+        shader.sampler2D("uTextura", 0)
+        shader.bool("uUsarTextura", True)
+
+
         glBindVertexArray(self.vao)
         glDrawArrays(GL_TRIANGLES, 0, len(self.vertices))
         glBindVertexArray(0)
         pass
+    def carregarTextura(self, caminhoImagem):
+        img = Image.open(caminhoImagem) # carrega a imagem
+        img = img.transpose(Image.FLIP_TOP_BOTTOM) # inverte a imagem verticalmente
+        imgData = img.convert('RGBA').tobytes() # converte os dados para unsigned byte
+
+        self.texId = glGenTextures(1) # cria um objeto textura
+        glBindTexture(GL_TEXTURE_2D, self.texId) # torna o objeto ativo na unidade GL_TEXTURE0
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR) # filtragem (magnificação)
+        glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR) # filtragem (minificação)
+
+        glTexImage2D(GL_TEXTURE_2D, # Tipo da textura. Normalmente GL_TEXTURE_2D
+            0, # Nível de mipmap. Use 0 para a textura base (nível mais detalhado)
+            GL_RGBA, # Formato interno da textura na GPU
+            img.width, # largura da textura em pixels
+            img.height, # altura da textura em pixels
+            0, # Deve ser zero. Bordas diferentes estão obsoletas
+            GL_RGBA, # Formato dos dados que estão sendo enviados (GL_RGB, GL_RGBA)
+            GL_UNSIGNED_BYTE, # Tipo de dados do array (GL_UNSIGNED_BYTE, GL_FLOAT)
+            imgData) # Ponteiro para os dados da imagem
+        glGenerateMipmap(GL_TEXTURE_2D)
+        glBindTexture(GL_TEXTURE_2D, 0)
+        pass
+        
+

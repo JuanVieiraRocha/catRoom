@@ -113,6 +113,7 @@ def main():
 
 
         shader.material((0.75, 0.72, 0.62), 0.25, 10.0)
+        quarto.carregarTextura("textures/Wood_01-128x128.png")
         quarto.desenhar(shader, modelo_quarto)
 
         glfw.swap_buffers(janela)
